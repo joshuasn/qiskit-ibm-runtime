@@ -22,7 +22,7 @@ from ibm_quantum_schemas.common import (
     F64TensorModel,
     PauliLindbladMapModel,
     QpyDataV13ToV17Model,
-    SamplexModelSSV1ToSSV4,
+    SamplexModel,
     TensorModel,
 )
 from ibm_quantum_schemas.executor.version_1_1 import (
@@ -42,6 +42,10 @@ if TYPE_CHECKING:
     from qiskit.circuit import QuantumCircuit
 
     from ..datatree import DataTree
+
+# hack: allow any SSV>=1 version by switching SamplexModelSSV1ToSSV3 -> SamplexModel
+SamplexItemModel.model_fields["samplex"].annotation = SamplexModel
+SamplexItemModel.model_rebuild(force=True)
 
 
 def passthrough_data_to_1_1(passthrough_data: DataTree) -> DataTreeModel:
@@ -147,7 +151,7 @@ def quantum_program_to_1_1(program: QuantumProgram, options: ExecutorOptions) ->
                     else:
                         arguments[name] = value
             model_item = SamplexItemModel(
-                samplex=SamplexModelSSV1ToSSV4.from_samplex(item.samplex, ssv=get_ssv_version(4)),
+                samplex=SamplexModel.from_samplex(item.samplex, ssv=get_ssv_version(5)),
                 samplex_arguments=arguments,
                 shape=item.shape,
                 chunk_size=chunk_size,
